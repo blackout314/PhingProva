@@ -21,6 +21,10 @@
 		{
 			return "Hello World!";
 		}
+		
+		public function _getVersion() {
+			return "0.1";
+		}
 	};
 
 ?>
