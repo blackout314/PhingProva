@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+
+<project name="Hello World Example" default="build" basedir="." description="This is an example buildfile for Phing.">
+	<target name="prepare">
+		<mkdir dir="reports/coverage"/>
+		<mkdir dir="reports/tests"/>
+		<mkdir dir="docs"/>
+	</target>
+	
+	<target name="reports">
+		<coverage-setup database="reports/coverage.db">
+			<fileset dir="src">
+				<include name="*.php"/>
+				<exclude name="*Test.php"/>
+			</fileset>
+		</coverage-setup>
+		<phpunit codecoverage="true">
+			<formatter type="xml" todir="reports"/>
+			<batchtest>
+				<fileset dir="src">
+					<include name="*Test.php"/>
+				</fileset>
+			</batchtest>
+		</phpunit>
+		<phpunitreport infile="reports/testsuites.xml" format="frames" todir="reports/tests" styledir="../../../etc"/>
+		<coverage-report outfile="reports/coverage.xml">
+			<report todir="reports/coverage" styledir="../../../etc"/>
+		</coverage-report>
+	</target>
+	
+	<target name="test">
+		<phpunit haltonerror="true" haltonfailure="true">
+			<batchtest>
+				<fileset dir="src">
+					<include name="*Test.php"/>
+				</fileset>
+			</batchtest>
+		</phpunit>
+	</target>
+	
+	<target name="docs">
+		<phpdoc title="Phing Example" destdir="docs" output="HTML:Smarty:PHP"
+		linksource="true" quiet="true">
+			<fileset dir="src">
+				<include name="*.php"/>
+			</fileset>
+		</phpdoc>
+	</target>
+	
+	<target name="build" depends="test,prepare,reports,docs">
+		<tar destfile="helloworld.tar.gz" basedir="src" compression="gzip" />
+	</target>
+
+	<target name="clean">
+		<delete dir="reports"/>
+		<delete dir="docs"/>
+		<delete file="helloworld.tar.gz"/>
+	</target>
+
+	<target name="demo" depends="build">
+		<exec command="cp helloworld.tar.gz /home/blackout" logoutput="yes" />
+	</target>
+
+	<target name="copy">
+		<exec command="scp -i /path/to/ssh/key build/deploy-${nextTag}.tgz apache@server.example.com:/path/to/bitestats/htdocs/" />
+		<exec command="ssh -i /path/to/ssh/key apache@server.example.com 'cd bitestats/htdocs &amp;&amp; tar -zxf deploy-${nextTag}.tgz &amp;&amp; ln -s deploy-${nextTag} next &amp;&amp; ln -s /usr/local/Zend/ZendFramework-1.11.2-minimal/library/Zend/ public/library/Zend &amp;&amp; php -f public/cli.php -- -a updatedbpatch &amp;&amp; mv -fT next public'" logoutput="yes"/>
+		<exec command="ssh lorna@server.example.com 'supervisorctl restart worker'" logoutput="yes"/>
+	</target>
+</project>
