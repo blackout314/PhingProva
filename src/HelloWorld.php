@@ -21,7 +21,9 @@
 		{
 			return "Hello World!";
 		}
-		
+		/**
+		 * return the version
+		 */		
 		public function _getVersion() {
 			return "0.1";
 		}
